@@ -31,7 +31,7 @@ def gen_abd_params(N, f):
 
 def gen_cas_params(N, f):
     """ Generates all the possible values of n, k, q1, q2, q3, q4 
-        for a given value of N = No. od DCs and f = availability target
+        for a given value of N = No. of DCs and f = availability target
     """
     quorum_params = []
     quorum_params_append = quorum_params.append
