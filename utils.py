@@ -1,9 +1,18 @@
 import sys
 import constants.opt_consts as CONSTS
+from cls.placement import PlacementAbd, PlacementCas
+from functools import lru_cache
+
+def obj_factory(_type, **kwargs):
+    """ Factory method to create objects
+    """
+    obj = eval(_type)(**kwargs)
+    return obj
 
 def choose(elements, length):
     """Return the list of all possible combinations
     """
+    @lru_cache(maxsize=256)
     def __choose(elements, length):
         """ This method is to calculate nCr. i.e., for the given element list and required length,
             calculate all possible combinations of that length.
@@ -48,4 +57,5 @@ def gen_cas_params(N, f):
 def generate_placements(N, f, protocol):
     """ Generate quorum params based on protocol
     """
-    return CONSTS.GEN_PARAM_FUNC[protocol](N, f)
+    return eval(CONSTS.GEN_PARAM_FUNC[protocol])(N, f)
+
