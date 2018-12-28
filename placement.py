@@ -34,9 +34,7 @@ def main():
               'heuristic': args.heuristic}
     _type = PLACEMENT_CLASS_MAPPER[args.protocol]
     placement_obj = obj_factory(_type, **kwargs)
-    print(type(placement_obj))
     #placement_obj.find_placement()
-    print(placement_obj.__dict__)
     out_file = './out/out_' + args.file_name.split("/")[-1]
     process_output(placement_obj, out_file, args.verbose)
 
