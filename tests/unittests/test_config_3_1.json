@@ -1,0 +1,38 @@
+{
+  "hueristic": "latency",
+  "number_of_datacenters": 3,
+  "failure_tolerance" : 1,
+  "per_server_ratio": [0.33, 0.33, 0.34],
+  "latencies": [
+    [0,1,1],
+    [1,0,1],
+    [1,1,0]
+  ],
+  "bandwidth": [
+         ["inf", 1,1],
+         [1, "inf",1],
+         [1, 1, "inf"]
+  ],
+  "EC2_cost_per_second": 1,
+  "object_size": 10000.0,
+  "total_number_of_objects":1000000,
+  "mean_arrival_rate": 200,
+  "read_ratio": 0.9,
+  "SLO_read" : 450,
+  "SLO_write": 650,
+  "time_to_decode": 0,
+  "data_transfer_cost": [
+    1.0,
+    1.0,
+    1.0],
+  "storage_cost": 1,
+  "expected_results":{
+        "protocol": "ABD",
+        "dc_ids": [0,1,2],
+        "Q1": 3,
+        "Q2": 3,
+        "total_cost": 0,
+        "average_get": 2,
+        "average_put": 2 
+  }
+}
