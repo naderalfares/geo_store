@@ -9,21 +9,20 @@ def obj_factory(_type, **kwargs):
     obj = eval(_type)(**kwargs)
     return obj
 
+def __choose(elements, length):
+    """ This method is to calculate nCr. i.e., for the given element list and required length,
+        calculate all possible combinations of that length.
+    """
+    for i in range(len(elements)):
+        if length == 1:
+            yield (elements[i],)
+        else:
+            for next in __choose(elements[i+1:len(elements)], length-1):
+                yield (elements[i],) + next
+
 def choose(elements, length):
     """Return the list of all possible combinations
     """
-    @lru_cache(maxsize=256)
-    def __choose(elements, length):
-        """ This method is to calculate nCr. i.e., for the given element list and required length,
-            calculate all possible combinations of that length.
-        """
-        for i in range(len(elements)):
-            if length == 1:
-                yield (elements[i],)
-            else:
-                for next in __choose(elements[i+1:len(elements)], length-1):
-                    yield (elements[i],) + next
-    
     return list(__choose(elements, length))
 
 def gen_abd_params(N, f):
