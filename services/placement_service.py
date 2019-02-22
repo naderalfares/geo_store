@@ -2,7 +2,7 @@ from itertools import product
 from utils import combinations, generate_placement_params
 from constants.opt_consts import FUNC_HEURISTIC_MAP
 
-def min_latency_abd(dcs, group, params):
+def min_latency_abd(datacenters, group, params):
     """ Latency based greedy heuristic
     """
     dc_ids = [int(dc.id) for dc in datacenters]
@@ -31,7 +31,8 @@ def min_latency_abd(dcs, group, params):
                 # Check if the selection meets latency constraints
                 i = int(datacenter.id)
                 latency += group.client_dist[i]*\
-                            (max(latency_list[:q1])+max(latency_list[:q2]))
+                            (max([datacenter.latencies[j] for j in _iq1])+\
+                                max(datacenter.latencies[k] for k in _iq2))
 
                 _get_cost = group.client_dist[i] * \
                                 (sum([datacenters[i].network_cost for j in _iq1]) + \
@@ -48,10 +49,12 @@ def min_latency_abd(dcs, group, params):
                     min_get_cost = get_cost
                     min_put_cost = put_cost
                     selected_placement = combination
-                    read_lat = lat
-                    write_lat = lat
+                    read_lat = latency
+                    write_lat = latency
                     m_g = m
     # Calculate other costs
+    if selected_placement is None:
+        return None
     selected_dcs = selected_placement[0][1]
     storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"] \
                                             for i in selected_dcs]) * \
@@ -69,7 +72,7 @@ def min_latency_abd(dcs, group, params):
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
 
 
-def min_latency_cas(dcs, group, params):
+def min_latency_cas(datacenters, group, params):
     """ Latency based heuristic
     """
     dc_ids = [int(dc.id) for dc in datacenters]
@@ -125,6 +128,8 @@ def min_latency_cas(dcs, group, params):
                     selected_placement = combination
                     M, K = m_g, k_g
     # Calculate other costs
+    if selected_placement is None:
+        return None
     selected_dcs = selected_placement[0][2]
     storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"] \
                                             for i in selected_dcs]) * \
@@ -134,7 +139,8 @@ def min_latency_cas(dcs, group, params):
     iq2 = [[0]*len(dc_ids)]*len(dc_ids)
     iq3 = [[0]*len(dc_ids)]*len(dc_ids)
     iq4 = [[0]*len(dc_ids)]*len(dc_ids)
-    # Generate iq1, iq2 
+    # Generate iq1, iq2
+    # TODO: Check for bugs
     for i, val in enumerate(selected_placement):
         for j in val[3]:
             iq1[i][j] = 1
@@ -147,7 +153,7 @@ def min_latency_cas(dcs, group, params):
     return (selected_dcs, iq1, iq2, iq3, iq4, M, K, read_lat, write_lat, \
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
 
-def min_cost_abd(dcs, group, params):
+def min_cost_abd(datacenters, group, params):
     """ Network cost based greedy heuristic
     """
     dc_ids = [int(dc.id) for dc in datacenters]
@@ -167,7 +173,7 @@ def min_cost_abd(dcs, group, params):
         for dcs in possible_dcs:
             latency = 0
             combination = []
-            cost_list = [elem if elem[0] in dcs for elem in cost_dc_list]
+            cost_list = [elem for elem in cost_dc_list if elem[0] in dcs]
             for datacenter in datacenters:
                 # Get possible combination of DCs (of size q1 and q2) from the 
                 # m-sized set of DCs.
@@ -194,10 +200,12 @@ def min_cost_abd(dcs, group, params):
                     min_get_cost = get_cost
                     min_put_cost = put_cost
                     selected_placement = combination
-                    read_lat = lat
-                    write_lat = lat
+                    read_lat = latency
+                    write_lat = latency
                     m_g = m
     # Calculate other costs
+    if selected_placement is None:
+        return None
     selected_dcs = selected_placement[0][1]
     storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"] \
                                             for i in selected_dcs]) * \
@@ -214,7 +222,7 @@ def min_cost_abd(dcs, group, params):
     return (selected_dcs, m_g, iq1, iq2, read_lat, write_lat, 
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
 
-def min_cost_cas(dcs, group, params):
+def min_cost_cas(datacenters, group, params):
     """ Network cost based heuristic
     """
     dc_ids = [int(dc.id) for dc in datacenters]
@@ -236,7 +244,7 @@ def min_cost_cas(dcs, group, params):
             get_lat = 0
             put_lat = 0
             combination = []
-            cost_list = [elem if elem[0] in dcs for elem in cost_dc_list]
+            cost_list = [elem for elem in cost_dc_list if elem[0] in dcs]
             for datacenter in datacenters:
                 # Get possible combination of DCs (of size q1 and q2) from the 
                 # m-sized set of DCs.
@@ -272,6 +280,8 @@ def min_cost_cas(dcs, group, params):
                     selected_placement = combination
                     M, K = m_g, k_g
     # Calculate other costs
+    if selected_placement is None:
+        return None
     selected_dcs = selected_placement[0][2]
     storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"] \
                                             for i in selected_dcs]) * \
