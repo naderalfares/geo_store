@@ -1,10 +1,10 @@
 import sys
-#sys.path.append('/home/sobasu/research/geo_store')
 import json
 import argparse
 from argparse import ArgumentParser
-from utils import generate_placements, obj_factory
-from constants.opt_consts import PLACEMENT_CLASS_MAPPER
+from factory import obj_factory, json_to_obj
+from cls import Group, DataCenter
+from constants.opt_consts import PLACEMENT_CLASS_MAPPER, DATACENTER, GROUP
 
 def parse_args():
     parser = ArgumentParser(description = 'Process cmd args for placements')
@@ -13,12 +13,25 @@ def parse_args():
                         required=False)
     parser.add_argument('-t','--protocol', dest='protocol', required=True)
     #Passing no heuristic arg would result a brute force
-    parser.add_argument('-H','--heuristic', dest='heuristic', default='',\
+    parser.add_argument('-H','--heuristic', dest='heuristic', default='brute_force',\
                         required=False)
     parser.add_argument('-v','--verbose', dest='verbose', action='store_true',\
                         required=False)
     args = parser.parse_args()
     return args
+
+def process_input(file_name):
+    datacenters = []
+    groups = []
+    with open(file_name, "r", encoding="utf-8-sig") as f:
+        data = json.load(f)
+    for dc in data.get("datacenters"):
+        dc_obj = json_to_obj(dc, DATACENTER)
+        datacenters.append(dc_obj)
+    for grp in data.get("input_groups"):
+        grp_obj = json_to_obj(grp, GROUP)
+        groups.append(grp_obj)
+    return datacenters, groups
 
 def process_output(placement_obj, fname, verbose=False):
     if verbose:
@@ -29,14 +42,18 @@ def process_output(placement_obj, fname, verbose=False):
 
 def main():
     args = parse_args()
-    file_name = args.file_path + '/' + args.file_name
-    kwargs = {'file_name': file_name,\
-              'heuristic': args.heuristic}
-    _type = PLACEMENT_CLASS_MAPPER[args.protocol]
-    placement_obj = obj_factory(_type, **kwargs)
-    #placement_obj.find_placement()
-    out_file = './out/out_' + args.file_name.split("/")[-1]
-    process_output(placement_obj, out_file, args.verbose)
+    file_name = args.file_path + '/' + args.file_name \
+                    if args.file_path else args.file_name
+    datacenters, groups = process_input(file_name)
+    kwargs = { 'file_name': file_name,\
+               'heuristic': args.heuristic,\
+               'datacenters': datacenters,\
+               'groups': groups }
+    placement_cls = PLACEMENT_CLASS_MAPPER[args.protocol]
+    placement_obj = obj_factory(placement_cls, **kwargs)
+    placement_obj.find_placement()
+    #out_file = './out/out_' + args.file_name.split('/')[-1]
+    #process_output(placement_obj, out_file, args.verbose)
 
 if __name__ == "__main__":
     main()

@@ -4,6 +4,9 @@ BRUTE_FORCE = 'brute_force'
 MIN_COST = 'min_cost'
 MIN_LATENCY = 'min_latency'
 
+GROUP = "Group"
+DATACENTER = "DataCenter"
+
 GEN_ABD = 'gen_abd_params'
 GEN_CAS = 'gen_cas_params'
 
@@ -21,7 +24,15 @@ PLACEMENT_CLASS_MAPPER = {
 }
 
 FUNC_HEURISTIC_MAP = {
-    MIN_COST: MIN_COST,
-    MIN_LATENCY: MIN_LATENCY,
-    BRUTE_FORCE: BRUTE_FORCE
+    ABD: {
+        MIN_COST: MIN_COST+'_'+ABD,
+        MIN_LATENCY: MIN_LATENCY+'_'+ABD,
+        BRUTE_FORCE: BRUTE_FORCE+'_'+ABD
+    },
+
+    CAS: {
+        MIN_COST: MIN_COST+'_'+CAS,
+        MIN_LATENCY: MIN_LATENCY+'_'+CAS,
+        BRUTE_FORCE: BRUTE_FORCE+'_'+CAS
+    }
 }

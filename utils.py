@@ -1,40 +1,33 @@
 import sys
+import math
+import itertools
 import constants.opt_consts as CONSTS
-from cls.placement import PlacementAbd, PlacementCas
-from functools import lru_cache
 
-def obj_factory(_type, **kwargs):
-    """ Factory method to create objects
-    """
-    obj = eval(_type)(**kwargs)
-    return obj
+def combinations(iterable, r):
+    return list(itertools.combinations(iterable, r))
 
-def __choose(elements, length):
-    """ This method is to calculate nCr. i.e., for the given element list and required length,
-        calculate all possible combinations of that length.
-    """
-    for i in range(len(elements)):
-        if length == 1:
-            yield (elements[i],)
-        else:
-            for next in __choose(elements[i+1:len(elements)], length-1):
-                yield (elements[i],) + next
+def check_latency_constraint_abd():
+    pass
 
-def choose(elements, length):
-    """Return the list of all possible combinations
-    """
-    return list(__choose(elements, length))
+def check_latency_constraint_cas():
+    pass
+
+def gen_path(mat):
+    if mat == []:
+        return []
+    for e in mat[0]:
+        return e, append(gen_path(mat[1:]))
 
 def gen_abd_params(N, f):
     """ Generate possible values of n, q1, q2
     """
     quorum_params = []
     quorum_params_append = quorum_params.append
-    for n in range(f+1, N+1):
-        for q1 in range(f+1, n-f+1):
-            for q2 in range(f+1, n-f+1):
+    for n in range(2*f+1, N+1):
+        for q1 in range(math.ceil((N-1)/2), n-f+1):
+            for q2 in range(math.ceil((N-1)/2), n-f+1):
                 if q1+q2 > n:
-                    quorum_params_append([n, q1, q2])
+                    quorum_params_append((n, q1, q2))
     return quorum_params
 
 def gen_cas_params(N, f):
@@ -53,7 +46,7 @@ def gen_cas_params(N, f):
                                 quorum_params_append([n, k, q1, q2, q3, q4])
     return quorum_params
 
-def generate_placements(N, f, protocol):
+def generate_placement_params(N, f, protocol):
     """ Generate quorum params based on protocol
     """
     return eval(CONSTS.GEN_PARAM_FUNC[protocol])(N, f)

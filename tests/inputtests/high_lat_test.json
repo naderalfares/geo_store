@@ -97,6 +97,7 @@
         0.2
       ],
       "object_size": 100,
+      "metadata_size": 1,
       "num_objects": 100,
       "arrival_rate": 100,
       "read_ratio": 0.9,
@@ -115,6 +116,7 @@
         0.05
       ],
       "object_size": 10000,
+      "metadata_size": 1,
       "num_objects": 100,
       "arrival_rate": 100,
       "read_ratio": 0.1,
