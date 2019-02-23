@@ -12,6 +12,7 @@ def parse_args():
     parser.add_argument('-p','--file-path', dest='file_path', default='',\
                         required=False)
     parser.add_argument('-t','--protocol', dest='protocol', required=True)
+    parser.add_argument('-k','--k', dest='k', required=False)
     #Passing no heuristic arg would result a brute force
     parser.add_argument('-H','--heuristic', dest='heuristic', default='brute_force',\
                         required=False)
@@ -47,6 +48,7 @@ def main():
     datacenters, groups = process_input(file_name)
     kwargs = { 'file_name': file_name,\
                'heuristic': args.heuristic,\
+               'k': args.k,\
                'datacenters': datacenters,\
                'groups': groups }
     placement_cls = PLACEMENT_CLASS_MAPPER[args.protocol]

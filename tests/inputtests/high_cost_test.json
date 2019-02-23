@@ -4,12 +4,12 @@
       "id": 0,
       "latencies": [
         0,
+        10,
+        100,
         1,
-        1,
-        1,
-        1
+        200
       ],
-      "network_cost": 1,
+      "network_cost": 100,
       "provider": "AWS",
       "details": {
         "size": "t2.xlarge",
@@ -22,11 +22,11 @@
       "latencies": [
         1,
         0,
+        200,
         1,
-        1,
-        1
+        100
       ],
-      "network_cost": 1,
+      "network_cost": 20,
       "provider": "AWS",
       "details": {
         "size": "t2.xlarge",
@@ -38,12 +38,12 @@
       "id": 2,
       "latencies": [
         1,
-        1,
+        100,
         0,
         1,
-        1
+        200
       ],
-      "network_cost": 1,
+      "network_cost": 10,
       "provider": "AWS",
       "details": {
         "size": "t2.xlarge",
@@ -56,11 +56,11 @@
       "latencies": [
         1,
         1,
-        1,
+        200,
         0,
-        1
+        100
       ],
-      "network_cost": 1,
+      "network_cost": 200,
       "provider": "AWS",
       "details": {
         "size": "t2.xlarge",
@@ -72,12 +72,12 @@
       "id": 4,
       "latencies": [
         1,
-        1,
-        1,
+        100,
+        200,
         1,
         0
       ],
-      "network_cost": 1,
+      "network_cost": 30,
       "provider": "AWS",
       "details": {
         "size": "t2.xlarge",
@@ -102,8 +102,8 @@
       "arrival_rate": 100,
       "read_ratio": 0.9,
       "write_ratio": 0.1,
-      "SLO_read": 400,
-      "SLO_write": 500,
+      "SLO_read": 10000,
+      "SLO_write": 10000,
       "time_to_decode": 1
     },
     {
@@ -115,14 +115,33 @@
         0.05,
         0.05
       ],
-      "object_size": 10000,
-      "metadata_size": 1,
+      "object_size": 1000,
+      "metadata_size": 10,
       "num_objects": 100,
       "arrival_rate": 100,
       "read_ratio": 0.1,
       "write_ratio": 0.9,
-      "SLO_read": 450,
-      "SLO_write": 650,
+      "SLO_read": 10000,
+      "SLO_write": 10000,
+      "time_to_decode": 1
+    },
+    {
+      "availability_target": 1,
+      "client_dist": [
+        0.45,
+        0.05,
+        0.05,
+        0.45,
+        0
+      ],
+      "object_size": 1000,
+      "metadata_size": 10,
+      "num_objects": 100,
+      "arrival_rate": 100,
+      "read_ratio": 0.5,
+      "write_ratio": 0.5,
+      "SLO_read": 10000,
+      "SLO_write": 10000,
       "time_to_decode": 1
     }
   ]

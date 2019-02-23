@@ -6,7 +6,7 @@ def min_latency_abd(datacenters, group, params):
     """ Latency based greedy heuristic
     """
     dc_ids = [int(dc.id) for dc in datacenters]
-    mincost = 999999
+    mincost = 99999999999
     min_get_cost = 0
     min_put_cost = 0
     read_lat = 0
@@ -79,7 +79,7 @@ def min_latency_cas(datacenters, group, params):
     """ Latency based heuristic
     """
     dc_ids = [int(dc.id) for dc in datacenters]
-    mincost = 999999
+    mincost = 99999999999
     min_get_cost = 0
     min_put_cost = 0
     read_lat = 0
@@ -128,7 +128,7 @@ def min_latency_cas(datacenters, group, params):
                 get_cost = group.read_ratio*group.arrival_rate*_get_cost
                 put_cost = group.read_ratio*group.arrival_rate*_put_cost
                 _storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"] \
-                                                        for i in dcs])*(group.object_size/K)
+                                                        for i in dcs])*(group.object_size/k_g)
                 _vm_cost = sum([datacenters[i].details["price"] for i in dcs])
                 if (get_cost+put_cost+_storage_cost+_vm_cost) < mincost:
                     mincost = get_cost+put_cost+_storage_cost+_vm_cost
@@ -161,7 +161,8 @@ def min_cost_abd(datacenters, group, params):
     """ Network cost based greedy heuristic
     """
     dc_ids = [int(dc.id) for dc in datacenters]
-    mincost = 999999
+    mincost = 99999999999
+    min_get_cost = 0
     min_get_cost = 0
     min_put_cost = 0
     read_lat = 0
@@ -235,7 +236,7 @@ def min_cost_cas(datacenters, group, params):
     """ Network cost based heuristic
     """
     dc_ids = [int(dc.id) for dc in datacenters]
-    mincost = 999999
+    mincost = 99999999999
     min_get_cost = 0
     min_put_cost = 0
     read_lat = 0
@@ -285,7 +286,7 @@ def min_cost_cas(datacenters, group, params):
                 get_cost = group.read_ratio*group.arrival_rate*_get_cost
                 put_cost = group.read_ratio*group.arrival_rate*_put_cost
                 _storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"] \
-                                                        for i in dcs])*(group.object_size/K)
+                                                        for i in dcs])*(group.object_size/k_g)
                 _vm_cost = sum([datacenters[i].details["price"] for i in dcs])
                 if (get_cost+put_cost+_storage_cost+_vm_cost) < mincost:
                     mincost = get_cost+put_cost+_storage_cost+_vm_cost
@@ -487,7 +488,7 @@ def brute_force_cas(datacenters, group, params):
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
 
 
-def get_placement(obj, heuristic):
+def get_placement(obj, heuristic, K):
     N = len(obj.datacenters)
     G = len(obj.groups)
     # Iterate over groups and find placements for each group
@@ -496,7 +497,7 @@ def get_placement(obj, heuristic):
         f = group.availability_target
         # Generate possible param tuples (quorum sizes, code dimension, length)
         # that conforms to the constraints.
-        params = generate_placement_params(N, f, protocol)
+        params = generate_placement_params(N, f, protocol, K)
         ret = eval(FUNC_HEURISTIC_MAP[protocol][heuristic])(obj.datacenters, group, params)
         print(ret)
         #TODO encapsulate results into objects and dump to out file

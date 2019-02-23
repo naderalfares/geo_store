@@ -24,12 +24,13 @@ class PlacementBase:
         self.file_name = kwargs['file_name']
         self.heuristic = kwargs['heuristic'] if kwargs['heuristic'] \
                                               else CONSTS.BRUTE_FORCE
+        self.k = int(kwargs['k']) if kwargs['k'] is not None else None
         self.groups = kwargs['groups']
         self.datacenters = kwargs['datacenters']
         self.placements = []
 
     def find_placement(self):
-        ps.get_placement(self, self.heuristic)
+        ps.get_placement(self, self.heuristic, self.k)
 
 class PlacementAbd(PlacementBase):
     def __init__(self, **kwargs):
