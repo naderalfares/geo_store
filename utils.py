@@ -6,18 +6,6 @@ import constants.opt_consts as CONSTS
 def combinations(iterable, r):
     return list(itertools.combinations(iterable, r))
 
-def check_latency_constraint_abd():
-    pass
-
-def check_latency_constraint_cas():
-    pass
-
-def gen_path(mat):
-    if mat == []:
-        return []
-    for e in mat[0]:
-        return e, append(gen_path(mat[1:]))
-
 def gen_abd_params(N, f):
     """ Generate possible values of n, q1, q2
     """
