@@ -1,3 +1,4 @@
+import json
 from services import placement_service as ps
 from constants import opt_consts as CONSTS
 
@@ -21,25 +22,36 @@ class PlacementOutput:
 
 class PlacementBase:
     def __init__(self, **kwargs):
-        self.file_name = kwargs['file_name']
+        self.outfile = kwargs['file_name']
         self.heuristic = kwargs['heuristic'] if kwargs['heuristic'] \
                                               else CONSTS.BRUTE_FORCE
         self.k = int(kwargs['k']) if kwargs['k'] is not None else None
         self.groups = kwargs['groups']
         self.datacenters = kwargs['datacenters']
-        self.placements = []
+        self.placements = {}
 
     def find_placement(self):
-        ps.get_placement(self, self.heuristic, self.k)
+        ps.get_placement(self, self.heuristic, self.k, use_protocol_param=False)
+
+    def write_output(self):
+        with open(self.outfile, "w") as f:
+            f.write(json.dumps(self.placements, sort_keys=True, indent=2))
+
 
 class PlacementAbd(PlacementBase):
     def __init__(self, **kwargs):
         super(PlacementAbd, self).__init__(**kwargs)
         self.protocol = CONSTS.ABD
+    
+    def find_placement(self):
+        ps.get_placement(self, self.heuristic, self.k, use_protocol_param=True)
 
 class PlacementCas(PlacementBase):
     def __init__(self, **kwargs):
         super(PlacementCas, self).__init__(**kwargs)
         self.protocol = CONSTS.CAS
+    
+    def find_placement(self):
+        ps.get_placement(self, self.heuristic, self.k, use_protocol_param=True)
 
 

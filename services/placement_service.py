@@ -1,6 +1,7 @@
+import json
 from itertools import product
 from utils import combinations, generate_placement_params
-from constants.opt_consts import FUNC_HEURISTIC_MAP
+from constants.opt_consts import FUNC_HEURISTIC_MAP, CAS, ABD, CAS_K_1
 
 def min_latency_abd(datacenters, group, params):
     """ Latency based greedy heuristic
@@ -19,7 +20,8 @@ def min_latency_abd(datacenters, group, params):
         # Get possible combination of DCs (of size m) from the set of DCs
         possible_dcs = combinations(dc_ids, m)
         for dcs in possible_dcs:
-            latency = 0
+            _latencies = []
+            #latency = 0
             _get_cost = 0
             _put_cost = 0
             combination = []
@@ -33,9 +35,12 @@ def min_latency_abd(datacenters, group, params):
                 _iq2 = [l[0] for l in latency_list[:q2]]
                 # Check if the selection meets latency constraints
                 i = int(datacenter.id)
-                latency += group.client_dist[i]*\
-                            (max([datacenter.latencies[j] for j in _iq1])+\
-                                max(datacenter.latencies[k] for k in _iq2))
+                #Average latency
+                #latency += group.client_dist[i]*\
+                #            (max([datacenter.latencies[j] for j in _iq1])+\
+                #                max(datacenter.latencies[k] for k in _iq2))
+                _latencies.append( max([datacenter.latencies[j] for j in _iq1])+\
+                                     max(datacenter.latencies[k] for k in _iq2))
 
                 _get_cost += group.client_dist[i] * \
                                 (sum([datacenters[i].network_cost for j in _iq1]) + \
@@ -43,7 +48,8 @@ def min_latency_abd(datacenters, group, params):
                 _put_cost += group.client_dist[i] * \
                                 (group.metadata_size*sum([datacenters[i].network_cost for j in _iq1]) + \
                                     group.object_size*sum([datacenters[k].network_cost for k in _iq2]))
-                combination.append((latency, dcs, _iq1, _iq2))
+                combination.append([dcs, _iq1, _iq2])
+            latency = max(_latencies)
             if latency < group.slo_read and latency < group.slo_write:
                 get_cost = group.read_ratio*group.arrival_rate*group.object_size*_get_cost
                 put_cost = group.read_ratio*group.arrival_rate*_put_cost
@@ -62,16 +68,17 @@ def min_latency_abd(datacenters, group, params):
     # Calculate other costs
     if selected_placement is None:
         return None
-    selected_dcs = selected_placement[0][1]
+    selected_dcs = selected_placement[0][0]
     iq1 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     iq2 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     # Generate iq1, iq2 
     for i, val in enumerate(selected_placement):
-        for j in val[2]:
+        for j in val[1]:
             iq1[i][j] = 1
-        for j in val[3]:
+        for j in val[2]:
             iq2[i][j] = 1
-    return (selected_dcs, m_g, iq1, iq2, read_lat, write_lat, 
+
+    return (m_g, selected_dcs, iq1, iq2, read_lat, write_lat, 
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
 
 
@@ -88,12 +95,12 @@ def min_latency_cas(datacenters, group, params):
     M, K = 0, 0
     storage_cost, vm_cost = 0, 0
     for m_g, k_g, q1, q2, q3, q4 in params:
-        # May pre-compute this. (though itertool is optimized)
-        # Get possible combination of DCs (of size m) from the set of DCs
         possible_dcs = combinations(dc_ids, m_g)
         for dcs in possible_dcs:
             get_lat = 0
             put_lat = 0
+            _get_latencies = []
+            _put_latencies = []
             _get_cost = 0
             _put_cost = 0
             combination = []
@@ -108,13 +115,18 @@ def min_latency_cas(datacenters, group, params):
                 _iq4 = [l[0] for l in latency_list[:q4]]
                 # Check if the selection meets latency constraints
                 i = int(datacenter.id)
-                get_lat += group.client_dist[i] * \
-                            (max([datacenter.latencies[j] for j in _iq1]) + \
-                                max([datacenter.latencies[k] for k in _iq4]))
-                put_lat += group.client_dist[i] * \
-                            (max([datacenter.latencies[j] for j in _iq1]) + \
-                                max([datacenter.latencies[k] for k in _iq2]) + \
-                                    max([datacenter.latencies[m] for m in _iq3]))
+                #get_lat += group.client_dist[i] * \
+                #            (max([datacenter.latencies[j] for j in _iq1]) + \
+                #                max([datacenter.latencies[k] for k in _iq4]))
+                #put_lat += group.client_dist[i] * \
+                #            (max([datacenter.latencies[j] for j in _iq1]) + \
+                #                max([datacenter.latencies[k] for k in _iq2]) + \
+                #                    max([datacenter.latencies[m] for m in _iq3]))
+                _get_latencies.append(max([datacenter.latencies[j] for j in _iq1]) + \
+                                        max([datacenter.latencies[k] for k in _iq4]))
+                _put_latencies.append(max([datacenter.latencies[j] for j in _iq1]) + \
+                                        max([datacenter.latencies[k] for k in _iq2]) + \
+                                            max([datacenter.latencies[m] for m in _iq3]))
                 _get_cost += group.client_dist[i] * \
                                 (group.metadata_size*sum([datacenters[i].network_cost for j in _iq1]) + \
                                     (group.object_size/k_g)*sum([datacenters[k].network_cost for k in _iq4]))
@@ -123,7 +135,9 @@ def min_latency_cas(datacenters, group, params):
                                                         sum([datacenters[i].network_cost for k in _iq3])) + \
                                     (group.object_size/k_g)*sum([datacenters[m].network_cost for m in _iq2]))
 
-                combination.append((get_lat, put_lat, dcs, _iq1, _iq2, _iq3, _iq4))
+                combination.append([dcs, _iq1, _iq2, _iq3, _iq4])
+            get_lat = max(_get_latencies)
+            put_lat = max(_put_latencies)
             if get_lat < group.slo_read and put_lat < group.slo_write:
                 get_cost = group.read_ratio*group.arrival_rate*_get_cost
                 put_cost = group.read_ratio*group.arrival_rate*_put_cost
@@ -140,19 +154,19 @@ def min_latency_cas(datacenters, group, params):
     # Calculate other costs
     if selected_placement is None:
         return None
-    selected_dcs = selected_placement[0][2]
+    selected_dcs = selected_placement[0][0]
     iq1 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     iq2 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     iq3 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     iq4 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     for i, val in enumerate(selected_placement):
-        for j in val[3]:
+        for j in val[1]:
             iq1[i][j] = 1
-        for j in val[4]:
+        for j in val[2]:
             iq2[i][j] = 1
-        for j in val[5]:
+        for j in val[3]:
             iq3[i][j] = 1
-        for j in val[6]:
+        for j in val[4]:
             iq4[i][j] = 1
     return (M, K, selected_dcs, iq1, iq2, iq3, iq4, read_lat, write_lat, \
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
@@ -178,6 +192,7 @@ def min_cost_abd(datacenters, group, params):
         possible_dcs = combinations(dc_ids, m)
         for dcs in possible_dcs:
             latency = 0
+            _latencies = []
             _get_cost = 0
             _put_cost = 0
             combination = []
@@ -189,9 +204,11 @@ def min_cost_abd(datacenters, group, params):
                 _iq2 = [l[0] for l in cost_list[:q2]]
                 # Check if the selection meets latency constraints
                 i = int(datacenter.id)
-                latency += group.client_dist[i]*\
-                            (max([datacenter.latencies[j] for j in _iq1])+\
-                                max(datacenter.latencies[k] for k in _iq2))
+                #latency += group.client_dist[i]*\
+                #            (max([datacenter.latencies[j] for j in _iq1])+\
+                #                max(datacenter.latencies[k] for k in _iq2))
+                _latencies.append( max([datacenter.latencies[j] for j in _iq1])+\
+                                     max(datacenter.latencies[k] for k in _iq2))
 
                 _get_cost += group.client_dist[i] * \
                                 (sum([datacenters[i].network_cost for j in _iq1]) + \
@@ -199,7 +216,8 @@ def min_cost_abd(datacenters, group, params):
                 _put_cost += group.client_dist[i] * \
                                 (group.metadata_size*sum([datacenters[i].network_cost for j in _iq1]) + \
                                     group.object_size*sum([datacenters[k].network_cost for k in _iq2]))
-                combination.append((latency, dcs, _iq1, _iq2))
+                combination.append([dcs, _iq1, _iq2])
+            latency = max(_latencies)
             if latency < group.slo_read and latency < group.slo_write:
                 get_cost = group.read_ratio*group.arrival_rate*group.object_size*_get_cost
                 put_cost = group.read_ratio*group.arrival_rate*_put_cost
@@ -217,7 +235,7 @@ def min_cost_abd(datacenters, group, params):
     # Calculate other costs
     if selected_placement is None:
         return None
-    selected_dcs = selected_placement[0][1]
+    selected_dcs = selected_placement[0][0]
     storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"] \
                                             for i in selected_dcs])*group.object_size
     vm_cost = sum([datacenters[i].details["price"] for i in selected_dcs])
@@ -225,9 +243,9 @@ def min_cost_abd(datacenters, group, params):
     iq2 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     # Generate iq1, iq2 
     for i, val in enumerate(selected_placement):
-        for j in val[2]:
+        for j in val[1]:
             iq1[i][j] = 1
-        for j in val[3]:
+        for j in val[2]:
             iq2[i][j] = 1
     return (m_g, selected_dcs, iq1, iq2, read_lat, write_lat, 
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
@@ -253,6 +271,8 @@ def min_cost_cas(datacenters, group, params):
         for dcs in possible_dcs:
             get_lat = 0
             put_lat = 0
+            _get_latencies = []
+            _put_latencies = []
             combination = []
             _get_cost = 0
             _put_cost = 0
@@ -266,13 +286,18 @@ def min_cost_cas(datacenters, group, params):
                 _iq4 = [l[0] for l in cost_list[:q4]]
                 # Check if the selection meets latency constraints
                 i = int(datacenter.id)
-                get_lat += group.client_dist[i] * \
-                            (max([datacenter.latencies[j] for j in _iq1]) + \
-                                max([datacenter.latencies[k] for k in _iq4]))
-                put_lat += group.client_dist[i] * \
-                            (max([datacenter.latencies[j] for j in _iq1]) + \
-                                max([datacenter.latencies[k] for k in _iq2]) + \
-                                    max([datacenter.latencies[m] for m in _iq3]))
+                #get_lat += group.client_dist[i] * \
+                #            (max([datacenter.latencies[j] for j in _iq1]) + \
+                #                max([datacenter.latencies[k] for k in _iq4]))
+                #put_lat += group.client_dist[i] * \
+                #            (max([datacenter.latencies[j] for j in _iq1]) + \
+                #                max([datacenter.latencies[k] for k in _iq2]) + \
+                #                    max([datacenter.latencies[m] for m in _iq3]))
+                _get_latencies.append(max([datacenter.latencies[j] for j in _iq1]) + \
+                                        max([datacenter.latencies[k] for k in _iq4]))
+                _put_latencies.append(max([datacenter.latencies[j] for j in _iq1]) + \
+                                        max([datacenter.latencies[k] for k in _iq2]) + \
+                                            max([datacenter.latencies[m] for m in _iq3]))
                 _get_cost += group.client_dist[i] * \
                                 (group.metadata_size*sum([datacenters[i].network_cost for j in _iq1]) + \
                                     (group.object_size/k_g)*sum([datacenters[k].network_cost for k in _iq4]))
@@ -281,7 +306,9 @@ def min_cost_cas(datacenters, group, params):
                                                         sum([datacenters[i].network_cost for k in _iq3])) + \
                                     (group.object_size/k_g)*sum([datacenters[m].network_cost for m in _iq2]))
 
-                combination.append((get_lat, put_lat, dcs, _iq1, _iq2, _iq3, _iq4))
+                combination.append([dcs, _iq1, _iq2, _iq3, _iq4])
+            get_lat = max(_get_latencies)
+            put_lat = max(_put_latencies)
             if get_lat < group.slo_read and put_lat < group.slo_write:
                 get_cost = group.read_ratio*group.arrival_rate*_get_cost
                 put_cost = group.read_ratio*group.arrival_rate*_put_cost
@@ -298,20 +325,20 @@ def min_cost_cas(datacenters, group, params):
     # Calculate other costs
     if selected_placement is None:
         return None
-    selected_dcs = selected_placement[0][2]
+    selected_dcs = selected_placement[0][0]
     iq1 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     iq2 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     iq3 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     iq4 = [[0]*len(dc_ids) for _ in range(len(dc_ids))]
     # Generate iq1, iq2 
     for i, val in enumerate(selected_placement):
-        for j in val[3]:
+        for j in val[1]:
             iq1[i][j] = 1
-        for j in val[4]:
+        for j in val[2]:
             iq2[i][j] = 1
-        for j in val[5]:
+        for j in val[3]:
             iq3[i][j] = 1
-        for j in val[6]:
+        for j in val[4]:
             iq4[i][j] = 1
     return (M, K, selected_dcs, iq1, iq2, iq3, iq4, read_lat, write_lat, \
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
@@ -487,17 +514,44 @@ def brute_force_cas(datacenters, group, params):
     return (selected_dcs, iq1, iq2, iq3, iq4, M, K, read_lat, write_lat, \
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
 
-
-def get_placement(obj, heuristic, K):
+def get_placement(obj, heuristic, K, use_protocol_param=False):
     N = len(obj.datacenters)
     G = len(obj.groups)
     # Iterate over groups and find placements for each group
-    for group in obj.groups:
-        protocol = obj.protocol
-        f = group.availability_target
-        # Generate possible param tuples (quorum sizes, code dimension, length)
-        # that conforms to the constraints.
-        params = generate_placement_params(N, f, protocol, K)
-        ret = eval(FUNC_HEURISTIC_MAP[protocol][heuristic])(obj.datacenters, group, params)
-        print(ret)
-        #TODO encapsulate results into objects and dump to out file
+    result = []
+    for i, group in enumerate(obj.groups):
+        _res = []
+        protocols =  [CAS, ABD, CAS_K_1]
+        if use_protocol_param is True:
+            protocols = [obj.protocol]
+        for protocol in protocols:
+            d = {}
+            f = group.availability_target
+            K = None
+            if protocol == CAS_K_1:
+                protocol = CAS
+                K = 1
+            params = generate_placement_params(N, f, protocol, K)
+            ret = eval(FUNC_HEURISTIC_MAP[protocol][heuristic])(obj.datacenters, group, params)
+            d["protocol"] = protocol
+            d["m"] = ret[0]
+            d["k"] = ret[1] if protocol==CAS else 1
+            d["selected_dcs"] = ret[1] if protocol==ABD else ret[2]
+            d["get_cost"] = ret[6] if protocol==ABD else ret[9]
+            d["put_cost"] = ret[7] if protocol==ABD else ret[10]
+            d["storage_cost"] = ret[8] if protocol==ABD else ret[11]
+            d["vm_cost"] = ret[9] if protocol==ABD else ret[12]
+            d["get_latency"] = ret[4] if protocol==ABD else ret[7]
+            d["put_latency"] = ret[5] if protocol==ABD else ret[8]
+            d["iq1"] = ret[2] if protocol==ABD else ret[3]
+            d["iq2"] = ret[3] if protocol==ABD else ret[4]
+            if protocol == CAS:
+                d["iq3"] = ret[5]
+                d["iq4"] = ret[6]
+            total_cost = d["get_cost"]+d["put_cost"]+d["storage_cost"]+d["vm_cost"]
+            d["total_cost"] = total_cost 
+            _res.append([d, total_cost])
+        _res.sort(key = lambda x: x[1])
+        result.append(_res[0][0])
+    d = {"output": result}
+    obj.placements = d

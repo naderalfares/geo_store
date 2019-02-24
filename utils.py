@@ -27,10 +27,10 @@ def gen_cas_params(N, f, K=None):
     for n in range(f+1, N+1):
         k_range = K+1 if K is not None and K<n else n
         for k in range(1, k_range):
-            for q1 in range(f+1, n-f+1):
-                for q2 in range(f+1, n-f+1):
-                    for q3 in range(f+1, n-f+1):
-                        for q4 in range(f+1, n-f+1):
+            for q1 in range(math.ceil((N-k)/2), n-f+1):
+                for q2 in range(math.ceil((N-k)/2), n-f+1):
+                    for q3 in range(math.ceil((N-k)/2), n-f+1):
+                        for q4 in range(math.ceil((N-k)/2), n-f+1):
                             if q1 + q3 > n and q1 + q4 > n and  q2 + q4 >= n + k and q4 > k:
                                 quorum_params_append([n, k, q1, q2, q3, q4])
     return quorum_params

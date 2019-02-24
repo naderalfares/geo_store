@@ -1,5 +1,6 @@
 ABD = 'abd'
 CAS = 'cas'
+CAS_K_1 = 'cas_k_1'
 BRUTE_FORCE = 'brute_force'
 MIN_COST = 'min_cost'
 MIN_LATENCY = 'min_latency'
@@ -12,6 +13,7 @@ GEN_CAS = 'gen_cas_params'
 
 PLACEMENT_ABD = 'PlacementAbd'
 PLACEMENT_CAS = 'PlacementCas'
+PLACEMENT_BASE = 'PlacementBase'
 
 GEN_PARAM_FUNC = {
     ABD: GEN_ABD,
