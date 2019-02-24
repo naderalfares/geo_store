@@ -10,6 +10,7 @@ from constants.opt_consts import PLACEMENT_CLASS_MAPPER, DATACENTER, GROUP,\
 def parse_args():
     parser = ArgumentParser(description = 'Process cmd args for placements')
     parser.add_argument('-f','--file-name', dest='file_name', required=True)
+    parser.add_argument('-o','--out-file', dest='outfile', required=False)
     parser.add_argument('-p','--file-path', dest='file_path', default='',\
                         required=False)
     parser.add_argument('-t','--protocol', dest='protocol', required=False)
@@ -36,7 +37,9 @@ def process_input(file_name):
     return datacenters, groups
 
 def baseline(args, datacenters, groups):
-    out_file = './out/out_'+args.protocol+'_baseline_'+args.file_name.split('/')[-1]
+    out_file = args.outfile
+    if out_file is None:
+        out_file = './out/out_'+args.protocol+'_baseline_'+args.file_name.split('/')[-1]
     kwargs = {  'heuristic': args.heuristic,\
                 'file_name': out_file,\
                 'k': args.k,\
@@ -51,7 +54,9 @@ def baseline(args, datacenters, groups):
     placement_obj.write_output()
 
 def main(args, datacenters, groups):
-    out_file = './out/out_' + args.file_name.split('/')[-1]
+    out_file = args.outfile
+    if out_file is None:
+        out_file = './out/out_'+args.protocol+'_baseline_'+args.file_name.split('/')[-1]
     kwargs = {  'file_name': out_file,\
                 'heuristic': args.heuristic,\
                 'k': None,\
