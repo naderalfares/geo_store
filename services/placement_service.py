@@ -519,6 +519,7 @@ def get_placement(obj, heuristic, K, use_protocol_param=False):
     G = len(obj.groups)
     # Iterate over groups and find placements for each group
     result = []
+    time_period = 0
     for i, group in enumerate(obj.groups):
         _res = []
         protocols =  [CAS, ABD, CAS_K_1]
@@ -550,7 +551,9 @@ def get_placement(obj, heuristic, K, use_protocol_param=False):
                 d["iq3"] = ret[5]
                 d["iq4"] = ret[6]
             _res.append([d, total_cost])
+        time_period += group.duration
         _res.sort(key = lambda x: x[1])
         result.append(_res[0][0])
-    d = {"output": result}
+    overall_cost = sum(d["total_cost"] for d in result)
+    d = {"output": result, "overall_cost": overall_cost, "time_period_hrs": time_period}
     obj.placements = d
