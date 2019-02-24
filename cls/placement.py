@@ -35,7 +35,7 @@ class PlacementBase:
 
     def write_output(self):
         with open(self.outfile, "w") as f:
-            f.write(json.dumps(self.placements, sort_keys=True, indent=2))
+            f.write(json.dumps(self.placements, sort_keys=False, indent=2))
 
 
 class PlacementAbd(PlacementBase):

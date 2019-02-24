@@ -10,4 +10,5 @@ class Group:
         self.write_ratio = None
         self.slo_read = None
         self.slo_write = None
+        self.duration = None
         self.time_to_decode = None

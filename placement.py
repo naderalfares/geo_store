@@ -54,7 +54,7 @@ def main(args, datacenters, groups):
     out_file = './out/out_' + args.file_name.split('/')[-1]
     kwargs = {  'file_name': out_file,\
                 'heuristic': args.heuristic,\
-                'k': args.k,\
+                'k': None,\
                 'datacenters': datacenters,\
                 'groups': groups }
     placement_obj = obj_factory(PLACEMENT_BASE, **kwargs)
