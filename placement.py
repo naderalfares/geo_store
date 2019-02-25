@@ -20,6 +20,8 @@ def parse_args():
                         required=False)
     parser.add_argument('-b','--baseline', dest='baseline', action='store_true',\
                         required=False)
+    parser.add_argument('-v','--verbose', dest='verbose', action='store_true',\
+                        required=False)
     args = parser.parse_args()
     return args
 
@@ -43,6 +45,7 @@ def baseline(args, datacenters, groups):
     kwargs = {  'heuristic': args.heuristic,\
                 'file_name': out_file,\
                 'k': args.k,\
+                'verbose': args.verbose,\
                 'datacenters': datacenters,\
                 'groups': groups }
     if args.protocol is None:
@@ -60,6 +63,7 @@ def main(args, datacenters, groups):
     kwargs = {  'file_name': out_file,\
                 'heuristic': args.heuristic,\
                 'k': None,\
+                'verbose': args.verbose,\
                 'datacenters': datacenters,\
                 'groups': groups }
     placement_obj = obj_factory(PLACEMENT_BASE, **kwargs)

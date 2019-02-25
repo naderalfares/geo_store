@@ -28,10 +28,11 @@ class PlacementBase:
         self.k = int(kwargs['k']) if kwargs['k'] is not None else None
         self.groups = kwargs['groups']
         self.datacenters = kwargs['datacenters']
+        self.verbose = True if kwargs['verbose'] else False
         self.placements = {}
 
     def find_placement(self):
-        ps.get_placement(self, self.heuristic, self.k, use_protocol_param=False)
+        ps.get_placement(self, self.heuristic, self.k, use_protocol_param=False, verbose=self.verbose)
 
     def write_output(self):
         with open(self.outfile, "w") as f:

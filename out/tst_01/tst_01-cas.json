@@ -148,22 +148,9 @@
       "put_latency": 906.8399999999999
     },
     {
-      "protocol": "abd",
-      "m": 5,
-      "selected_dcs": [
-        2,
-        3,
-        5,
-        7,
-        8
-      ],
-      "get_cost": 29.106,
-      "put_cost": 4.357584,
-      "storage_cost": 2.2561643835616443,
-      "vm_cost": 3.0143999999999997,
-      "total_cost": 38.73414838356165,
-      "get_latency": 572.44,
-      "put_latency": 572.44
+      "total_cost": Infinity,
+      "protocol": "cas",
+      "m": "INVALID"
     },
     {
       "protocol": "cas",
@@ -206,6 +193,6 @@
       "put_latency": 858.6600000000001
     }
   ],
-  "overall_cost": 141.62394880048862,
-  "time_period_hrs": 25
+  "overall_cost": 102.88980041692693,
+  "time_period_hrs": 22
 }

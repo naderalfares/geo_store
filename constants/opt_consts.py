@@ -1,6 +1,7 @@
 ABD = 'abd'
 CAS = 'cas'
 CAS_K_1 = 'cas_k_1'
+REP = 'replication'
 BRUTE_FORCE = 'brute_force'
 MIN_COST = 'min_cost'
 MIN_LATENCY = 'min_latency'
@@ -17,7 +18,8 @@ PLACEMENT_BASE = 'PlacementBase'
 
 GEN_PARAM_FUNC = {
     ABD: GEN_ABD,
-    CAS: GEN_CAS
+    CAS: GEN_CAS,
+    REP: GEN_CAS
 }
 
 PLACEMENT_CLASS_MAPPER = {
@@ -33,6 +35,12 @@ FUNC_HEURISTIC_MAP = {
     },
 
     CAS: {
+        MIN_COST: MIN_COST+'_'+CAS,
+        MIN_LATENCY: MIN_LATENCY+'_'+CAS,
+        BRUTE_FORCE: BRUTE_FORCE+'_'+CAS
+    },
+
+    REP: {
         MIN_COST: MIN_COST+'_'+CAS,
         MIN_LATENCY: MIN_LATENCY+'_'+CAS,
         BRUTE_FORCE: BRUTE_FORCE+'_'+CAS
