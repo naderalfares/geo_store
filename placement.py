@@ -53,6 +53,7 @@ def baseline(args, datacenters, groups):
         return
     placement_cls = PLACEMENT_CLASS_MAPPER[args.protocol]
     placement_obj = obj_factory(placement_cls, **kwargs)
+    print(placement_obj.verbose)
     placement_obj.find_placement()
     placement_obj.write_output()
 
@@ -73,6 +74,7 @@ def main(args, datacenters, groups):
 
 if __name__ == "__main__":
     args = parse_args()
+    print(args.verbose)
     file_name = args.file_path + '/' + args.file_name \
                     if args.file_path else args.file_name
     datacenters, groups = process_input(file_name)

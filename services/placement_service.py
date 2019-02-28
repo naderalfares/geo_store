@@ -492,7 +492,7 @@ def brute_force_cas(datacenters, group, params):
     return (selected_dcs, iq1, iq2, iq3, iq4, M, K, read_lat, write_lat, \
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
 
-def get_placement(obj, heuristic, K, use_protocol_param=False, verbose=False):
+def get_placement(obj, heuristic, K, verbose, use_protocol_param=False):
     N = len(obj.datacenters)
     G = len(obj.groups)
     # Iterate over groups and find placements for each group
@@ -532,9 +532,10 @@ def get_placement(obj, heuristic, K, use_protocol_param=False, verbose=False):
             d["get_latency"] = ret[4] if protocol==ABD else ret[7]
             d["put_latency"] = ret[5] if protocol==ABD else ret[8]
             if verbose:
+                print("Verbose is ", verbose)
                 d["iq1"] = ret[2] if protocol==ABD else ret[3]
                 d["iq2"] = ret[3] if protocol==ABD else ret[4]
-                if protocol == CAS:
+                if protocol in [CAS, REP]:
                     d["iq3"] = ret[5]
                     d["iq4"] = ret[6]
             _res.append([d, total_cost])
