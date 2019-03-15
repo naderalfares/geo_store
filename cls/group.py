@@ -11,4 +11,5 @@ class Group:
         self.slo_read = None
         self.slo_write = None
         self.duration = None
+        self.beta = None
         self.time_to_decode = None
