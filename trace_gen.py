@@ -56,20 +56,19 @@ def main(args, groups):
             random.shuffle(cl_reqs)
             cl_trace.setdefault(client, []).extend(cl_reqs)
             start_idx += length
-            print(client, len(cl_reqs), cl_reqs[0:2])
+            print(client, len(cl_reqs))
         start_key_id += int(grp.num_objects)
         #print(cl_trace)
     # Write to files
-    for c in cl_trace:
-        trace += cl_trace[c]
-    print(trace[0:10], len(trace))
-    with open(out_file, "w") as f:
-        writer = csv.writer(f)
-        writer.writerows(trace)
     for k, val in cl_trace.items():
+        random.shuffle(val)
         with open(client_files[int(k)], "w") as f:
             writer = csv.writer(f)
             writer.writerows(val)
+        trace += cl_trace[val]
+    with open(out_file, "w") as f:
+        writer = csv.writer(f)
+        writer.writerows(trace)
 
 if __name__ == "__main__":
     args = parse_args()
