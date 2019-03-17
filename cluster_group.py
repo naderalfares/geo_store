@@ -23,8 +23,6 @@ def get_df(fname):
     return df
 
 def print_score(X, labels_true, labels, n_clusters_, n_noise_):
-    print('Estimated number of clusters: %d' % n_clusters_)
-    print('Estimated number of noise points: %d' % n_noise_)
     print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
     print("Completeness: %0.3f" % metrics.completeness_score(labels_true, labels))
     print("V-measure: %0.3f" % metrics.v_measure_score(labels_true, labels))
@@ -66,22 +64,7 @@ def cluster(X, labels_true):
 def main(args, fname=None):
     filename = fname if fname else args.fname
     df = get_df(filename)
-    keys = list(df.key.unique())
-    dataset = []
-    labels = []
-    for key in keys:
-        tmp = df[df['key']==key]
-        t1 = tmp[0:1]
-        #data = [key, tmp.key.count()]
-        reads = sum(tmp['op']=='r')
-        writes = sum(tmp['op']=='w')
-        ratio = reads/(reads+writes)
-        data = [tmp.key.count(), ratio]
-        labels.append(int(t1['group']))
-        #TODO Add client dist as feature
-        dataset.append(data)
-    cl_data = pd.DataFrame(dataset)
-    cluster(cl_data, labels)
+    cluster(df, labels)
 
 if __name__ == "__main__":
     args = parse_args()

@@ -4,6 +4,7 @@ import json
 import math
 import random
 import argparse
+import pandas as pd
 from argparse import ArgumentParser
 from factory import obj_factory, json_to_obj
 from cls import Group
@@ -36,18 +37,30 @@ def main(args, groups):
                         for i in range(num_dcs)]
     start_key_id = 0
     trace = []
+    keys_dmp = []
     cl_trace = {}
     for i, grp in enumerate(groups):
-        keys = [j for j in range(start_key_id, start_key_id+int(grp.num_objects))]
+        #keys = [j for j in range(start_key_id, start_key_id+int(grp.num_objects))]
+        low = start_key_id
+        high = start_key_id+int(grp.num_objects)-1
         reads = math.ceil(grp.read_ratio*grp.arrival_rate*grp.duration)
         writes = math.ceil(grp.write_ratio*grp.arrival_rate*grp.duration)
-        reqs = ['r' for _ in range(reads)]+['w' for _ in range(writes)]
+        reqs = [[random.randint(low, high), 'r', i] for _ in range(reads)]+\
+                    [[random.randint(low, high), 'w', i] for _ in range(writes)]
         random.shuffle(reqs)
-        itr = math.ceil(len(reqs)/int(grp.num_objects))
-        keys = keys*itr
-        reqs = [list(_req)+[i] for _req in zip(keys, reqs)]
+
+        #TODO add client distribution as feature to key
+        df = pd.DataFrame(reqs)
+        df = df.rename(columns={0: 'key', 1: 'op', 2: 'group'})
+        for key in range(low, high+1):
+            tmp = df[df['key']==key]
+            reads = sum(tmp['op']=='r')
+            writes = sum(tmp['op']=='w')
+            ratio = reads/(reads+writes)
+            keys_dmp.append([(reads+writes)/grp.num_objects, ratio])
+        
+        #break
         # Divide into per client trace
-        random.shuffle(reqs)
         start_idx = 0
         for client, dist in enumerate(grp.client_dist):
             length = math.ceil(len(reqs)*dist)
@@ -60,15 +73,22 @@ def main(args, groups):
         start_key_id += int(grp.num_objects)
         #print(cl_trace)
     # Write to files
+    keys_file = './tests/traces/trace_%s/keys.csv'%args.outid
+    with open(keys_file, "w") as f:
+        writer = csv.writer(f)
+        writer.writerows(keys_dmp)
+    
     for k, val in cl_trace.items():
         random.shuffle(val)
         with open(client_files[int(k)], "w") as f:
             writer = csv.writer(f)
             writer.writerows(val)
-        trace += cl_trace[val]
+        trace += val
+
     with open(out_file, "w") as f:
         writer = csv.writer(f)
         writer.writerows(trace)
+
 
 if __name__ == "__main__":
     args = parse_args()
