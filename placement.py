@@ -15,6 +15,7 @@ def parse_args():
                         required=False)
     parser.add_argument('-t','--protocol', dest='protocol', required=False)
     parser.add_argument('-k','--k', dest='k', required=False)
+    parser.add_argument('-m','--m', dest='m', required=False)
     #Passing no heuristic arg would result a brute force
     parser.add_argument('-H','--heuristic', dest='heuristic', default='brute_force',\
                         required=False)
@@ -45,6 +46,7 @@ def baseline(args, datacenters, groups):
     kwargs = {  'heuristic': args.heuristic,\
                 'file_name': out_file,\
                 'k': args.k,\
+                'm': args.m,\
                 'verbose': args.verbose,\
                 'datacenters': datacenters,\
                 'groups': groups }
@@ -63,6 +65,7 @@ def main(args, datacenters, groups):
     kwargs = {  'file_name': out_file,\
                 'heuristic': args.heuristic,\
                 'k': None,\
+                'm': None,\
                 'verbose': args.verbose,\
                 'datacenters': datacenters,\
                 'groups': groups }

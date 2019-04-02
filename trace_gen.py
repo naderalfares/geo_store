@@ -89,6 +89,10 @@ def main(args, groups):
         writer = csv.writer(f)
         writer.writerows(trace)
 
+    for line in trace:
+        key = line[0]
+        if line[1] == 'r':
+            count[key]
 
 if __name__ == "__main__":
     args = parse_args()

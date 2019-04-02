@@ -53,8 +53,8 @@ def min_latency_abd(datacenters, group, params):
                                 sum([datacenters[i].details["storage_cost"]/(730*3600) for i in dcs])*\
                                     group.object_size
                 _vm_cost = sum([datacenters[i].details["price"]/3600 for i in dcs])
-                if group.duration*(get_cost+put_cost+_storage_cost+_vm_cost) < mincost:
-                    mincost = group.duration*(get_cost+put_cost+_storage_cost+_vm_cost)
+                if group.duration*(get_cost+put_cost+_storage_cost) < mincost:
+                    mincost = group.duration*(get_cost+put_cost+_storage_cost)#+_vm_cost)
                     storage_cost, vm_cost = _storage_cost, _vm_cost
                     min_get_cost, min_put_cost = get_cost, put_cost
                     selected_placement = combination
@@ -133,8 +133,8 @@ def min_latency_cas(datacenters, group, params):
                 _storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"]/(730*3600) \
                                                         for i in dcs])*(group.object_size/k_g)
                 _vm_cost = sum([datacenters[i].details["price"]/3600 for i in dcs])
-                if group.duration*(get_cost+put_cost+_storage_cost+_vm_cost) < mincost:
-                    mincost = group.duration*(get_cost+put_cost+_storage_cost+_vm_cost)
+                if group.duration*(get_cost+put_cost+_storage_cost) < mincost:
+                    mincost = group.duration*(get_cost+put_cost+_storage_cost)#+_vm_cost)
                     min_get_cost, min_put_cost = get_cost, put_cost
                     storage_cost, vm_cost = _storage_cost, _vm_cost
                     read_lat, write_lat = get_lat, put_lat
@@ -212,8 +212,8 @@ def min_cost_abd(datacenters, group, params):
                 _storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"]/(730*3600) \
                                                         for i in dcs])*(group.object_size)
                 _vm_cost = sum([datacenters[i].details["price"] for i in dcs])/3600
-                if group.duration*(get_cost+put_cost+_storage_cost+_vm_cost) < mincost:
-                    mincost = group.duration*(get_cost+put_cost+_storage_cost+_vm_cost)
+                if group.duration*(get_cost+put_cost+_storage_cost) < mincost:
+                    mincost = group.duration*(get_cost+put_cost+_storage_cost)#+_vm_cost)
                     min_get_cost, min_put_cost = get_cost, put_cost
                     storage_cost, vm_cost = _storage_cost, _vm_cost
                     selected_placement = combination
@@ -295,8 +295,10 @@ def min_cost_cas(datacenters, group, params):
                 _storage_cost = group.num_objects*sum([datacenters[i].details["storage_cost"]/(730*3600) \
                                                         for i in dcs])*(group.object_size/k_g)
                 _vm_cost = sum([datacenters[i].details["price"]/3600 for i in dcs])
-                if group.duration*(get_cost+put_cost+_storage_cost+_vm_cost) < mincost:
-                    mincost = group.duration*(get_cost+put_cost+_storage_cost+_vm_cost)
+                tot = (get_cost+put_cost+_storage_cost+_vm_cost)*3600
+                #print(m_g, k_g, get_cost*3600, put_cost*3600, _storage_cost*3600, _vm_cost*3600, tot)
+                if group.duration*(get_cost+put_cost+_storage_cost) < mincost:
+                    mincost = group.duration*(get_cost+put_cost+_storage_cost)#+_vm_cost)
                     min_get_cost, min_put_cost = get_cost, put_cost
                     storage_cost, vm_cost = _storage_cost, _vm_cost
                     read_lat, write_lat = get_lat, put_lat
@@ -356,7 +358,7 @@ def brute_force_abd(datacenters, group, params):
                                     max([dc.latencies[k] for k in _iq2]))
                         col.append((lat, dcs, _iq1, _iq2))
                 d.append(col)
-            print(len(d), len(d[0])) 
+            #print(len(d), len(d[0])) 
             for comb in product(*d):
                 lat = 0
                 _get_cost = 0
@@ -442,7 +444,7 @@ def brute_force_cas(datacenters, group, params):
                                                     max([dc.latencies[m] for m in _iq3]))
                                 col.append((get_lat, put_lat, dcs, _iq1, _iq2, _iq3, _iq4))
                 d.append(col)
-            print(len(d), len(d[0])) 
+            #print(len(d), len(d[0])) 
             for comb in product(*d):
                 get_lat = 0
                 put_lat = 0
@@ -494,13 +496,14 @@ def brute_force_cas(datacenters, group, params):
     return (selected_dcs, iq1, iq2, iq3, iq4, M, K, read_lat, write_lat, \
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
 
-def get_placement(obj, heuristic, K, verbose, use_protocol_param=False):
+def get_placement(obj, heuristic, M, K, verbose, use_protocol_param=False):
     N = len(obj.datacenters)
     G = len(obj.groups)
     # Iterate over groups and find placements for each group
     result = []
     time_period = 0
     for i, group in enumerate(obj.groups):
+        #print("group %s"%i)
         _res = []
         protocols =  [CAS, ABD, REP]
         if use_protocol_param is True:
@@ -509,7 +512,11 @@ def get_placement(obj, heuristic, K, verbose, use_protocol_param=False):
             d = {}
             f = group.availability_target
             if protocol==REP or K is not None:
-                params = generate_placement_params(N, f, protocol, 1)
+                if M is None:
+                    params = generate_placement_params(N, f, protocol, 1)
+                else:
+                    params = generate_placement_params(N, f, protocol, 1, M)
+
             else:
                 params = generate_placement_params(N, f, protocol, None)
             ret = eval(FUNC_HEURISTIC_MAP[protocol][heuristic])(obj.datacenters, group, params)
@@ -534,7 +541,7 @@ def get_placement(obj, heuristic, K, verbose, use_protocol_param=False):
             d["get_latency"] = ret[4] if protocol==ABD else ret[7]
             d["put_latency"] = ret[5] if protocol==ABD else ret[8]
             if verbose:
-                print("Verbose is ", verbose)
+                #print("Verbose is ", verbose)
                 d["iq1"] = ret[2] if protocol==ABD else ret[3]
                 d["iq2"] = ret[3] if protocol==ABD else ret[4]
                 if protocol in [CAS, REP]:
@@ -546,11 +553,11 @@ def get_placement(obj, heuristic, K, verbose, use_protocol_param=False):
             _res.sort(key = lambda x: x[1])
             result.append(_res[0][0])
     if len(result)>0:
-        overall_cost = sum([d["total_cost"] for d in result if d["total_cost"]!=float("inf")])
-        get_cost = sum([d["get_cost"] for d in result if d["get_cost"]!=float("inf")])
-        put_cost = sum([d["put_cost"] for d in result if d["put_cost"]!=float("inf")])
-        storage_cost = sum([d["storage_cost"] for d in result if d["storage_cost"]!=float("inf")])
-        vm_cost = sum([d["vm_cost"] for d in result if d["vm_cost"]!=float("inf")])
+        overall_cost = sum([d["total_cost"] for d in result if d.get("total_cost")!=float("inf")])
+        get_cost = sum([d["get_cost"] for d in result if d.get("get_cost")!=float("inf")])
+        put_cost = sum([d["put_cost"] for d in result if d.get("put_cost")!=float("inf")])
+        storage_cost = sum([d["storage_cost"] for d in result if d.get("storage_cost")!=float("inf")])
+        vm_cost = sum([d["vm_cost"] for d in result if d.get("vm_cost")!=float("inf")])
         d = {"output": result,\
              "overall_cost": overall_cost, \
              "get_cost": get_cost,\
