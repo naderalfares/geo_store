@@ -11,11 +11,19 @@ def gen_abd_params(N, f, K=None, M=None):
     """
     quorum_params = []
     quorum_params_append = quorum_params.append
-    for n in range(2*f+1, N+1):
+    if M is not None:
+        n = M
         for q1 in range(math.ceil((N-1)/2), n-f+1):
             for q2 in range(math.ceil((N-1)/2), n-f+1):
                 if q1+q2 > n:
                     quorum_params_append((n, q1, q2))
+
+    else:
+        for n in range(2*f+1, N+1):
+            for q1 in range(math.ceil((N-1)/2), n-f+1):
+                for q2 in range(math.ceil((N-1)/2), n-f+1):
+                    if q1+q2 > n:
+                        quorum_params_append((n, q1, q2))
     return quorum_params
 
 def gen_cas_params(N, f, K=None, M=None):

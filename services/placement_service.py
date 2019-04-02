@@ -496,13 +496,15 @@ def brute_force_cas(datacenters, group, params):
     return (selected_dcs, iq1, iq2, iq3, iq4, M, K, read_lat, write_lat, \
                 min_get_cost, min_put_cost, storage_cost, vm_cost)
 
-def get_placement(obj, heuristic, M, K, verbose, use_protocol_param=False):
+def get_placement(obj, heuristic, M, K, verbose, grp, use_protocol_param=False):
     N = len(obj.datacenters)
     G = len(obj.groups)
     # Iterate over groups and find placements for each group
     result = []
     time_period = 0
-    for i, group in enumerate(obj.groups):
+    grp = grp.split(",")
+    groups = [obj.groups[int(i)] for i in grp]
+    for i, group in enumerate(groups):
         #print("group %s"%i)
         _res = []
         protocols =  [CAS, ABD, REP]
@@ -511,14 +513,11 @@ def get_placement(obj, heuristic, M, K, verbose, use_protocol_param=False):
         for protocol in protocols:
             d = {}
             f = group.availability_target
-            if protocol==REP or K is not None:
-                if M is None:
-                    params = generate_placement_params(N, f, protocol, 1)
-                else:
-                    params = generate_placement_params(N, f, protocol, 1, M)
+            if protocol==REP:
+                params = generate_placement_params(N, f, protocol, 1, M)
 
             else:
-                params = generate_placement_params(N, f, protocol, None)
+                params = generate_placement_params(N, f, protocol, K, M)
             ret = eval(FUNC_HEURISTIC_MAP[protocol][heuristic])(obj.datacenters, group, params)
             if ret is None:
                 d["total_cost"] = float("inf")
@@ -554,10 +553,10 @@ def get_placement(obj, heuristic, M, K, verbose, use_protocol_param=False):
             result.append(_res[0][0])
     if len(result)>0:
         overall_cost = sum([d["total_cost"] for d in result if d.get("total_cost")!=float("inf")])
-        get_cost = sum([d["get_cost"] for d in result if d.get("get_cost")!=float("inf")])
-        put_cost = sum([d["put_cost"] for d in result if d.get("put_cost")!=float("inf")])
-        storage_cost = sum([d["storage_cost"] for d in result if d.get("storage_cost")!=float("inf")])
-        vm_cost = sum([d["vm_cost"] for d in result if d.get("vm_cost")!=float("inf")])
+        get_cost = sum([d["get_cost"] for d in result if d.get("get_cost")!=float("inf") and d.get("get_cost")!=None])
+        put_cost = sum([d["put_cost"] for d in result if d.get("put_cost")!=float("inf") and d.get("put_cost")!=None])
+        storage_cost = sum([d["storage_cost"] for d in result if d.get("storage_cost")!=float("inf") and d.get("storage_cost")!=None])
+        vm_cost = sum([d["vm_cost"] for d in result if d.get("vm_cost")!=float("inf") and d.get("vm_cost")!=None])
         d = {"output": result,\
              "overall_cost": overall_cost, \
              "get_cost": get_cost,\

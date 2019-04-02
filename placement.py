@@ -16,6 +16,7 @@ def parse_args():
     parser.add_argument('-t','--protocol', dest='protocol', required=False)
     parser.add_argument('-k','--k', dest='k', required=False)
     parser.add_argument('-m','--m', dest='m', required=False)
+    parser.add_argument('-g','--groups', dest='grp', required=False)
     #Passing no heuristic arg would result a brute force
     parser.add_argument('-H','--heuristic', dest='heuristic', default='brute_force',\
                         required=False)
@@ -47,6 +48,7 @@ def baseline(args, datacenters, groups):
                 'file_name': out_file,\
                 'k': args.k,\
                 'm': args.m,\
+                'grp': args.grp,\
                 'verbose': args.verbose,\
                 'datacenters': datacenters,\
                 'groups': groups }
@@ -66,6 +68,7 @@ def main(args, datacenters, groups):
                 'heuristic': args.heuristic,\
                 'k': None,\
                 'm': None,\
+                'grp': args.grp,\
                 'verbose': args.verbose,\
                 'datacenters': datacenters,\
                 'groups': groups }
