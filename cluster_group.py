@@ -33,14 +33,14 @@ def print_score(X, labels_true, labels, n_clusters_, n_noise_):
     print("Silhouette Coefficient: %0.3f"
 	  % metrics.silhouette_score(X, labels))
 
-def cluster(X, labels_true):
+def cluster(X, labels_true=None):
     db = DBSCAN().fit(X)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
     labels = db.labels_
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     n_noise_ = list(labels).count(-1)
-    print_score(X, labels_true, labels, n_clusters_, n_noise_)
+    #print_score(X, labels_true, labels, n_clusters_, n_noise_)
     unique_labels = set(labels)
     print(unique_labels)
     colors = [plt.cm.Spectral(each)
@@ -56,16 +56,18 @@ def cluster(X, labels_true):
         plt.plot(xy.values[:, 0], xy.values[:, 1], 'o', markerfacecolor=tuple(col), markeredgecolor='k', markersize=6)
 
     plt.title('Groups using Clustering')
-    plt.xlabel('No. of reqs per key')
-    plt.ylabel('Read ratio')
+    plt.xlabel('Arrival rate per key')
+    plt.ylabel('Read:Write')
     plt.show()
 
 
 def main(args, fname=None):
     filename = fname if fname else args.fname
-    df = get_df(filename)
-    cluster(df, labels)
+    X = np.genfromtxt(filename, delimiter=',')
+    dataset = pd.DataFrame({'Arrival_Rate':X[:,0],'Read_Write_Ratio':X[:,1]})
+    cluster(dataset, None)
 
 if __name__ == "__main__":
     args = parse_args()
+    print(args)
     main(args)

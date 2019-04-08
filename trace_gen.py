@@ -39,10 +39,12 @@ def main(args, groups):
     trace = []
     keys_dmp = []
     cl_trace = {}
+    num_keys = 0
     for i, grp in enumerate(groups):
         #keys = [j for j in range(start_key_id, start_key_id+int(grp.num_objects))]
         low = start_key_id
         high = start_key_id+int(grp.num_objects)-1
+        num_keys += (high-low+1)
         reads = math.ceil(grp.read_ratio*grp.arrival_rate*grp.duration)
         writes = math.ceil(grp.write_ratio*grp.arrival_rate*grp.duration)
         reqs = [[random.randint(low, high), 'r', i] for _ in range(reads)]+\
@@ -50,6 +52,7 @@ def main(args, groups):
         random.shuffle(reqs)
 
         #TODO add client distribution as feature to key
+        """
         df = pd.DataFrame(reqs)
         df = df.rename(columns={0: 'key', 1: 'op', 2: 'group'})
         for key in range(low, high+1):
@@ -58,7 +61,8 @@ def main(args, groups):
             writes = sum(tmp['op']=='w')
             ratio = reads/(reads+writes)
             keys_dmp.append([(reads+writes)/grp.num_objects, ratio])
-        
+        """
+
         #break
         # Divide into per client trace
         start_idx = 0
@@ -73,10 +77,6 @@ def main(args, groups):
         start_key_id += int(grp.num_objects)
         #print(cl_trace)
     # Write to files
-    keys_file = './tests/traces/trace_%s/keys.csv'%args.outid
-    with open(keys_file, "w") as f:
-        writer = csv.writer(f)
-        writer.writerows(keys_dmp)
     
     for k, val in cl_trace.items():
         random.shuffle(val)
@@ -89,10 +89,33 @@ def main(args, groups):
         writer = csv.writer(f)
         writer.writerows(trace)
 
+    counts = [[0]*(2+num_dcs) for _ in range(num_keys)]
     for line in trace:
-        key = line[0]
+        key = int(line[0])
         if line[1] == 'r':
-            count[key]
+            counts[key][-2] += 1
+        else:
+            counts[key][-1] += 1
+        counts[key][int(line[3])] += 1
+
+    
+    for c in counts:
+        total = c[-1]+c[-2]
+        if total == 0:
+            continue
+        rate = total/3600
+        r_ratio = c[-2]/c[-1] if c[-1] else 1
+        s_dist = [e/total for e in c[:-2]]
+        feature = [rate, r_ratio]
+        feature.extend(s_dist)
+        keys_dmp.append(feature)
+    
+    keys_file = './tests/traces/trace_%s/keys.csv'%args.outid
+    with open(keys_file, "w") as f:
+        writer = csv.writer(f)
+        writer.writerows(keys_dmp)
+
+
 
 if __name__ == "__main__":
     args = parse_args()

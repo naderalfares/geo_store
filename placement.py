@@ -10,6 +10,7 @@ from constants.opt_consts import PLACEMENT_CLASS_MAPPER, DATACENTER, GROUP,\
 def parse_args():
     parser = ArgumentParser(description = 'Process cmd args for placements')
     parser.add_argument('-f','--file-name', dest='file_name', required=True)
+    parser.add_argument('-i','--input-groups', dest='input_groups', required=True)
     parser.add_argument('-o','--out-file', dest='outfile', required=False)
     parser.add_argument('-p','--file-path', dest='file_path', default='',\
                         required=False)
@@ -27,7 +28,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def process_input(file_name):
+def process_input(file_name, input_groups):
     datacenters = []
     groups = []
     with open(file_name, "r", encoding="utf-8-sig") as f:
@@ -35,6 +36,8 @@ def process_input(file_name):
     for dc in data.get("datacenters"):
         dc_obj = json_to_obj(dc, DATACENTER)
         datacenters.append(dc_obj)
+    with open(input_groups, "r", encoding="utf-8-sig") as f:
+        data = json.load(f)
     for grp in data.get("input_groups"):
         grp_obj = json_to_obj(grp, GROUP)
         groups.append(grp_obj)
@@ -81,7 +84,14 @@ if __name__ == "__main__":
     args = parse_args()
     file_name = args.file_path + '/' + args.file_name \
                     if args.file_path else args.file_name
-    datacenters, groups = process_input(file_name)
+    input_groups = args.file_path + '/' + args.input_groups \
+                    if args.file_path else args.input_groups
+    datacenters, groups = process_input(file_name, input_groups)
+    if args.baseline is True:
+        baseline(args, datacenters, groups)
+    else:
+        main(args, datacenters, groups)
+    datacenters, groups = process_input(file_name, input_groups)
     if args.baseline is True:
         baseline(args, datacenters, groups)
     else:
