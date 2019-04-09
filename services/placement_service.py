@@ -121,8 +121,8 @@ def min_latency_cas(datacenters, group, params):
                                     (group.object_size/k_g)*sum([datacenters[k].network_cost if k!=datacenter.id else 0.01 for k in _iq4]))
                 _put_cost += group.client_dist[i] * \
                                 (group.metadata_size*(sum([datacenters[j].network_cost if j!=datacenter.id else 0.01 for j in _iq1]) + \
-                                                        sum([datacenters[i].network_cost if i!=datacenter.id else 0.01 for k in _iq3])) + \
-                                    (group.object_size/k_g)*sum([datacenters[i].network_cost if i!=datacenter.id else 0.01 for m in _iq2]))
+                                                        sum([datacenters[i].network_cost if k!=datacenter.id else 0.01 for k in _iq3])) + \
+                                    (group.object_size/k_g)*sum([datacenters[i].network_cost if m!=datacenter.id else 0.01 for m in _iq2]))
 
                 combination.append([dcs, _iq1, _iq2, _iq3, _iq4])
             get_lat = max(_get_latencies)
@@ -200,10 +200,10 @@ def min_cost_abd(datacenters, group, params):
 
                 _get_cost += group.client_dist[i] * \
                                 (sum([datacenters[j].network_cost if j!=datacenter.id else 0.01 for j in _iq1]) + \
-                                    sum([datacenters[i].network_cost if j!=datacenter.id else 0.01 for k in _iq2]))
+                                    sum([datacenters[i].network_cost if k!=datacenter.id else 0.01 for k in _iq2]))
                 _put_cost += group.client_dist[i] * \
                                 (group.metadata_size*sum([datacenters[j].network_cost if j!=datacenter.id else 0.01 for j in _iq1]) + \
-                                    group.object_size*sum([datacenters[i].network_cost if j!=datacenter.id else 0.01 for k in _iq2]))
+                                    group.object_size*sum([datacenters[i].network_cost if k!=datacenter.id else 0.01 for k in _iq2]))
                 combination.append([dcs, _iq1, _iq2])
             latency = max(_latencies)
             if latency < group.slo_read and latency < group.slo_write:
